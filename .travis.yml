@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t andersontmp/docker -f ./client/Dockerfile.dev ./client
+
+scripts:
+  - docker run -e CI=true andersontmp/docker npm test
+
+after_success:
+  - docker build -t andersontmp/multi-client ./client
+  - docker build -t andersontmp/multi-nginx ./nginx
+  - docker build -t andersontmp/multi-server ./server
+  - docker build -t andersontmp/multi-worker ./worker
+  # Log in Docker hub
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" -- password-stdin
+  # Enviar imagens do Docker Hub
+  - docker push andersontmp/multi-client
+  - docker push andersontmp/multi-nginx
+  - docker push andersontmp/multi-server
+  - docker push andersontmp/multi-worker
